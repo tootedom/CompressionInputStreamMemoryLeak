@@ -193,7 +193,21 @@ The "connection" reference isn't used in the "close" method of the InputStream.
 I've included a version of the "com.mysql.jdbc.CompressedInputStream" in "org.greencheek.trackconnection",
 and installed this locally in a patch jar, and the leak no longer occurs.
 
+#### Versions affected.
 
+The above issue of retention of connections with useCompression=true I have seen in a several versions
+of the mysql driver: 5.1.23, 5.1.24, and the latest 5.1.25.
+
+The above issue can also affect you even if you are using a Connection Pooling via dbcp, tomcat, bone cp;
+and are using the replication driver or the load balancing driver with useCompression=true.
+
+The reason this issue can affect you even when using a Connection Pool is that is the mysql server
+can time out your client connection.   Your client connection in the Connection Pool can time out due to the
+client connection being idle for longer than "wait_timeout" (not used), then your connection pool (if you have
+connection validation enabled), will discard the failed connection, and create a new connection under the hood
+for you.  As a result the NonRegisteringDriver, will slowly keep onto more and more JDBC4Connection
+objects, and you'll slowly have a memory leak.  Depending upon the number of connections in your pool,
+the number of connection configured in your load balanced connection url; the quicker the leak will occur.
 
 
 

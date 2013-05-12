@@ -191,7 +191,28 @@ The "connection" reference isn't used in the "close" method of the InputStream.
 
 
 I've included a version of the "com.mysql.jdbc.CompressedInputStream" in "org.greencheek.trackconnection",
-and installed this locally in a patch jar, and the leak no longer occurs.
+that contains the changes to use a WeakReference.  The source is taken from 5.1.25 version of the mysql
+connector/j source code.
+
+I have installed this locally in a patch jar on my local development environment, and the leak no longer occurs against
+the test class.  I have verified that compression of the query is still enable by viewing the network traffic with
+ngrep on my local machine:
+
+sudo ngrep -d lo0 -q -W byline port 3306
+
+````
+T 127.0.0.1:14320 -> 127.0.0.1:3306 [AP]
+.......x.-.;..@.D#q.)!M.AE.....d.~...qK..
+(=~~.w.u.c...z.......0.Xn.
+...........g.Y.....S..\..Z...46!....4..f5..|,..F....r?.Je......~W........\)....X.o...Z3.3....K.
+
+T 127.0.0.1:3306 -> 127.0.0.1:14320 [AP]
+A................def....count(*)..?.................."......374.......".
+````
+
+I have not run this against the entire test suite of the connector/j or run the patch in
+any live or test environment.  Therefore, it may not be the correct way to tackle the issue.
+Hopefully, I'll be able to look into this type of testing soon.
 
 #### Versions affected.
 

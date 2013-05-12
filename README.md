@@ -169,5 +169,31 @@ ConnectionImpl ------------------>  io (MysqlIO) -> inputStream (ReadAheadInputS
 
 #### Potential solution
 
-The
+The Potential solution to the issue is to have a WeakReference in the CompressedInputStream.
+The "connection" reference isn't used in the "close" method of the InputStream.
+
+````
+/** The connection that is using us (used to read config values) */
+	private WeakReference<Connection> connection;
+````
+
+
+````
+	/**
+	 * @see java.io.InputStream#close()
+	 */
+	public void close() throws IOException {
+		this.in.close();
+		this.buffer = null;
+		this.inflater = null;
+	}
+````
+
+
+I've included a version of the "com.mysql.jdbc.CompressedInputStream" in "org.greencheek.trackconnection",
+and installed this locally in a patch jar, and the leak no longer occurs.
+
+
+
+
 
